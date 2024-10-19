@@ -1,8 +1,13 @@
 package com.example.quizlista
 
+import android.annotation.SuppressLint
+import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.View
 import android.widget.Button
+import android.widget.ProgressBar
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import android.widget.TextView
@@ -11,7 +16,6 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import java.lang.Thread.sleep
 
 data class Question(
     val questionId: Int,
@@ -47,12 +51,12 @@ val questions = listOf(
     ),
     Question(
         questionId = 3,
-        questionText = "Jakie jest twoje imię?",
+        questionText = "Który jest teraz rok?",
         answers = listOf(
-            Answer(1, "Jan"),
-            Answer(2, "Anna"),
-            Answer(3, "Piotr"),
-            Answer(4, "Krzysztof")
+            Answer(1, "2024"),
+            Answer(2, "1999"),
+            Answer(3, "2034"),
+            Answer(4, "1364")
         )
     ),
     Question(
@@ -126,13 +130,14 @@ val questions = listOf(
         )
     )
 )
+private var numQuestion = 0
+var randQuest = questions.shuffled()
+var randAnswer = randQuest[numQuestion].answers.shuffled()
 
 class MainActivity : AppCompatActivity() {
 
     private val showQuestion: TextView by lazy{findViewById(R.id.qcontent)}
     private val showQuestionCount: TextView by lazy{findViewById(R.id.pytanie)}
-
-    private var numQuestion = 0
 
     private val r1: RadioButton by lazy{findViewById(R.id.radioButton1)}
     private val r2: RadioButton by lazy{findViewById(R.id.radioButton2)}
@@ -142,16 +147,29 @@ class MainActivity : AppCompatActivity() {
     private val submitButton: Button by lazy{findViewById(R.id.submit)}
     private val radioGroup: RadioGroup by lazy{findViewById((R.id.rg))}
     private val viewScore: TextView by lazy{findViewById(R.id.score)}
+    private val proBar: ProgressBar by lazy{findViewById(R.id.progressBar)}
 
+    private var score = 0
+
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putInt("nQ", numQuestion)
+        outState.putInt("nS", score)
+    }
+
+    @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
+        if (savedInstanceState != null) {
+            numQuestion = savedInstanceState.getInt("nQ")
+            score = savedInstanceState.getInt("nS")
+        }
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
 
         var showQuestionCountText = "Pytanie ${numQuestion+1}/10"
-        val randQuest = questions.shuffled()
-        var randAnswer = randQuest[numQuestion].answers.shuffled()
-        var score = 0
+        proBar.progress = 10
 
         fun set() {
             r1.text = randAnswer[0].answerText
@@ -180,7 +198,7 @@ class MainActivity : AppCompatActivity() {
 
                 if (numQuestion < 9) {
                     numQuestion++
-
+                    proBar.progress +=10
 
                     showQuestion.text = randQuest[numQuestion].questionText
                     showQuestionCountText = "Pytanie ${numQuestion + 1}/10"
@@ -193,8 +211,13 @@ class MainActivity : AppCompatActivity() {
                 } else {
                     viewScore.text = "Wynik: ${score*10} punktów."
                     viewScore.visibility = View.VISIBLE
-                    sleep(5000)
-
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        numQuestion = 0
+                        score = 0
+                        val intent = Intent(this, MainActivity::class.java)
+                        startActivity(intent)
+                        finish()
+                    }, 3000)
                 }
             } else {
                 Toast.makeText(this, "Wybierz odpowiedź!", Toast.LENGTH_SHORT).show()
