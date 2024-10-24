@@ -1,3 +1,5 @@
+@file:Suppress("SpellCheckingInspection")
+
 package com.example.quizlista
 
 import android.annotation.SuppressLint
@@ -130,6 +132,7 @@ val questions = listOf(
         )
     )
 )
+
 private var numQuestion = 0
 var randQuest = questions.shuffled()
 var randAnswer = randQuest[numQuestion].answers.shuffled()
@@ -214,6 +217,8 @@ class MainActivity : AppCompatActivity() {
                     Handler(Looper.getMainLooper()).postDelayed({
                         numQuestion = 0
                         score = 0
+                        randQuest = questions.shuffled()
+                        randAnswer = randQuest[numQuestion].answers.shuffled()
                         val intent = Intent(this, MainActivity::class.java)
                         startActivity(intent)
                         finish()
